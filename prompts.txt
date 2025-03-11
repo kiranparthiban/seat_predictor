@@ -1,0 +1,11 @@
+I am going to create a seat_prediction project for a college... this is a django project, consider yourself a pro django developer and i want you to be my assistant in this project...
+i have 5 routes in this project, 
+
+auth/login and auth/register which are basic login and register routes...with separate auth_app....
+
+and api/predict where the user will enter certain details like name of the student,
+date of birth, mobile number, gender, email id, religion, class 12th marks(the user will enter out of 500/600 i want it to be converted to percentage),
+course(chosen between pcm, pcb,pcmb), stream(chosen between science/commerce and arts), degree(chosen between bsc,bca,b.a,bcom, bba),
+category(chosen between general,obc,sc,st,mbc,bcm)...... and then there will be predict button upon clicked the ai logic will run and the response should be fetched.. 
+i will write the ai logic later, now just randomly give the result as percentage of getting selected for that seat... i will replpace it with my ai logic later.. 
+give appropriate django code files first give me file structure then ask me for next and we can oriceed steo by step...
