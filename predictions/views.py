@@ -1,8 +1,16 @@
 import json
-import random
+import os
 import re
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from .ai_engine import AiEngine  # Import the AI Engine
+
+# Get the absolute path of the current file
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, "models")  # Ensure models/ is correctly referenced
+
+# Initialize the AI Engine with models stored in 'models/' directory
+ai_engine = AiEngine(base_dir=MODEL_DIR)
 
 @csrf_exempt
 def predict_view(request):
@@ -20,8 +28,8 @@ def predict_view(request):
       - degree
       - category
       - class_12_percentage (e.g. "85", "85.0", or "85%")
-
-    Returns a random seat_selection_probability for demonstration.
+    
+    Returns a seat_selection_probability computed using AiEngine.
     """
     if request.method == 'POST':
         try:
@@ -29,7 +37,7 @@ def predict_view(request):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
 
-        # Extract basic fields
+        # Extract fields
         name = data.get('name')
         date_of_birth = data.get('date_of_birth')
         mobile_number = data.get('mobile_number')
@@ -37,34 +45,38 @@ def predict_view(request):
         email = data.get('email')
         religion = data.get('religion')
         course = data.get('course')
-        stream = data.get('stream')
-        degree = data.get('degree')
+        school_stream = data.get('stream')  # Renamed to match AI Engine naming
+        college_stream = data.get('degree')  # Renamed to match AI Engine naming
         category = data.get('category')
 
-        # Get the 'class_12_percentage' field, which might be "85", "85.0", or "85%"
+        # Process 'class_12_percentage' field
         raw_percentage_str = data.get('class_12_percentage', '0').strip()
-
-        # 1) Remove trailing "%" if present. For example, "85%" -> "85", "90.5%" -> "90.5"
         if raw_percentage_str.endswith('%'):
             raw_percentage_str = raw_percentage_str[:-1].strip()
-
-        # 2) (Optionally) strip out any non-numeric chars if you want to be more robust
-        #    E.g., if someone typed "85% approx."
-        # raw_percentage_str = re.sub(r'[^0-9\.]', '', raw_percentage_str)
-
-        # 3) Convert to float safely
         try:
             class_12_percentage = float(raw_percentage_str)
         except ValueError:
             class_12_percentage = 0.0
 
-        # 4) Clamp percentage to [0, 100] if desired
-        #    (useful in case user typed something like "110%" or "-5%")
-        # class_12_percentage = min(max(class_12_percentage, 0.0), 100.0)
+        # Ensure category is numeric
+        try:
+            category = int(category)
+        except (ValueError, TypeError):
+            return JsonResponse({"error": "Invalid category format. Must be a number."}, status=400)
 
-        # Generate dummy seat probability
-        seat_probability = round(random.uniform(0, 100), 2)
+        # Predict seat selection probability using AI Engine
+        try:
+            seat_probability = ai_engine.predict(
+                marks_12th=class_12_percentage,
+                school_stream=school_stream,
+                college_stream=college_stream,
+                category=category,
+                model="nn"  # Using the neural network model for prediction
+            )
+        except Exception as e:
+            return JsonResponse({"error": f"Prediction error: {str(e)}"}, status=500)
 
+        # Prepare response
         response_data = {
             "name": name,
             "date_of_birth": date_of_birth,
@@ -73,8 +85,8 @@ def predict_view(request):
             "email": email,
             "religion": religion,
             "course": course,
-            "stream": stream,
-            "degree": degree,
+            "stream": school_stream,
+            "degree": college_stream,
             "category": category,
             "class_12_percentage": round(class_12_percentage, 2),
             "seat_selection_probability": seat_probability
