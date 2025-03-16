@@ -22,6 +22,7 @@ def predict_view(request):
             class_12_percentage = float(raw_percentage)
         except ValueError:
             return JsonResponse({"error": "Invalid percentage format."}, status=400)
+        
         if not (0 <= class_12_percentage <= 100):
             return JsonResponse({"error": "Percentage must be between 0 and 100."}, status=400)
         
@@ -30,6 +31,7 @@ def predict_view(request):
             category = int(data.get('category', 0))
         except (ValueError, TypeError):
             return JsonResponse({"error": "Category must be an integer."}, status=400)
+        
         if category not in {0, 1, 2, 3}:
             return JsonResponse({"error": "Invalid category. Use 0, 1, 2, or 3."}, status=400)
         
@@ -37,7 +39,7 @@ def predict_view(request):
         school_stream = str(data.get('stream', '')).strip()
         college_stream = str(data.get('degree', '')).strip()
         
-        # Predict
+        # Predict using AI
         try:
             probability = ai_engine.predict(
                 marks_12th=class_12_percentage,
@@ -49,6 +51,20 @@ def predict_view(request):
         except Exception as e:
             return JsonResponse({"error": f"Prediction failed: {str(e)}"}, status=500)
         
+        # Scale probability to range 0-100
+        probability *= 100  
+
+        # Apply probability adjustment based on marks
+        if class_12_percentage < 35:
+            adjusted_prob = 0  # Direct rejection
+        else:
+            # Quadratic decay scaling based on marks
+            scaling_factor = (class_12_percentage / 100) ** 2
+            adjusted_prob = probability * scaling_factor
+
+        # Ensure probability is within 0-100 range
+        adjusted_prob = max(0, min(100, adjusted_prob))
+
         # Prepare response
         response_data = {
             **{k: str(data.get(k, '')) for k in ['name', 'date_of_birth', 'mobile_number', 
@@ -57,7 +73,7 @@ def predict_view(request):
             "degree": college_stream,
             "category": category,
             "class_12_percentage": round(class_12_percentage, 2),
-            "seat_selection_probability": round(probability, 4)
+            "seat_selection_probability": round(adjusted_prob, 4)
         }
         return JsonResponse(response_data, status=200)
     
