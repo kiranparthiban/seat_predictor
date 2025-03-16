@@ -38,7 +38,15 @@ def predict_view(request):
         # Extract streams
         school_stream = str(data.get('stream', '')).strip()
         college_stream = str(data.get('degree', '')).strip()
+
+        # Extract model type (default to 'nn' if not provided)
+        model = str(data.get('model', 'nn')).strip().lower()
         
+        # Validate model type (assuming allowed models are ['nn', 'svm', 'rf', 'xgboost'])
+        allowed_models = {'nn', 'log', 'xgb'}
+        if model not in allowed_models:
+            return JsonResponse({"error": f"Invalid model type. Choose from {', '.join(allowed_models)}."}, status=400)
+
         # Predict using AI
         try:
             probability = ai_engine.predict(
@@ -46,7 +54,7 @@ def predict_view(request):
                 school_stream=school_stream,
                 college_stream=college_stream,
                 category=category,
-                model="nn"
+                model=model  # Dynamically using the provided model
             )
         except Exception as e:
             return JsonResponse({"error": f"Prediction failed: {str(e)}"}, status=500)
@@ -72,8 +80,9 @@ def predict_view(request):
             "stream": school_stream,
             "degree": college_stream,
             "category": category,
+            "model_used": model,  # Include the model name in the response
             "class_12_percentage": round(class_12_percentage, 2),
-            "seat_selection_probability": round(adjusted_prob, 4)
+            "seat_selection_probability": round(adjusted_prob, 2)
         }
         return JsonResponse(response_data, status=200)
     
