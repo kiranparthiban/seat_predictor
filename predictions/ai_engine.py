@@ -6,7 +6,6 @@ import joblib
 import xgboost as xgb
 import os
 
-# 1) Define the PyTorch model architecture
 class NeuralNet(nn.Module):
     def __init__(self, input_size):
         super(NeuralNet, self).__init__()
@@ -22,7 +21,6 @@ class NeuralNet(nn.Module):
         x = self.sigmoid(self.output(x))
         return x
 
-# 2) Define AI Engine class
 class AiEngine:
     def __init__(self, base_dir="."):
         self.base_dir = base_dir
@@ -37,13 +35,8 @@ class AiEngine:
         self.feature_names = ["Marks_12th", "Same_Stream", "Category"]
 
     def _load_nn_model(self):
-        # Must match the training script's input size (3 features)
         model = NeuralNet(input_size=3)
-        # Pass weights_only=True to avoid the future pickle warning (requires PyTorch >= 2.0)
-        state_dict = torch.load(
-            os.path.join(self.base_dir, "nn_model.pth"),
-            weights_only=True
-        )
+        state_dict = torch.load(os.path.join(self.base_dir, "nn_model.pth"))
         model.load_state_dict(state_dict)
         model.eval()
         return model
@@ -56,63 +49,30 @@ class AiEngine:
         category,
         model="nn"
     ):
-        """
-        Predict method that takes four parameters separately:
-          1) marks_12th       : numeric (e.g. 85)
-          2) school_stream    : string label (e.g. 'Science')
-          3) college_stream   : string label (e.g. 'Commerce')
-          4) category         : numeric or label-encoded (e.g. 2)
+        # Clip marks_12th to valid range [0, 100]
+        marks_12th_clipped = max(0.0, min(float(marks_12th), 100.0))
         
-        The code computes Same_Stream, then forms [marks_12th, Same_Stream, category].
-        """
-        
-        # Determine if the streams match
+        # Determine if streams match
         same_stream = 1 if school_stream.strip().lower() == college_stream.strip().lower() else 0
         
-        # Create the final array
-        X_array = np.array([float(marks_12th), same_stream, float(category)]).reshape(1, -1)
+        # Validate category (assuming categories 0-3)
+        if category not in {0, 1, 2, 3}:
+            raise ValueError(f"Invalid category: {category}. Must be 0, 1, 2, or 3.")
         
-        if X_array.shape[1] != 3:
-            raise ValueError(f"Invalid input shape: {X_array.shape}. Expected (1, 3).")
-
+        # Create input array
+        X_array = np.array([marks_12th_clipped, same_stream, float(category)]).reshape(1, -1)
+        
         if model == "nn":
-            # Predict using PyTorch model
             X_tensor = torch.tensor(X_array, dtype=torch.float32)
-            output = self.nn_model(X_tensor).detach().numpy()
-            probability = output[0][0]
-            return 1 if probability >= 0.5 else 0
-        
+            with torch.no_grad():
+                output = self.nn_model(X_tensor).detach().numpy()
+            return float(output[0][0])
         else:
-            # Convert to a DataFrame with valid column names for sklearn/XGBoost
             X_df = pd.DataFrame(X_array, columns=self.feature_names)
-
             if model == "xgb":
-                pred = self.xgb_model.predict(X_df)
-                return int(pred[0])
-            
+                proba = self.xgb_model.predict_proba(X_df)[:, 1][0]
             elif model == "log":
-                pred = self.log_model.predict(X_df)
-                return int(pred[0])
-            
+                proba = self.log_model.predict_proba(X_df)[:, 1][0]
             else:
-                raise ValueError("Invalid model type. Choose from 'nn', 'xgb', or 'log'.")
-
-
-# --------------------------
-# Example usage
-# --------------------------
-if __name__ == "__main__":
-    engine = AiEngine()
-
-    # Provide 4 values in a natural format:
-    #  1) marks_12th     => e.g. 85
-    #  2) school_stream  => e.g. "Science"
-    #  3) college_stream => e.g. "Commerce"
-    #  4) category       => numeric or label-encoded (e.g. 2)
-    prediction_nn  = engine.predict(85, "Science", "Commerce", 2, model="nn")
-    prediction_xgb = engine.predict(85, "Science", "Commerce", 2, model="xgb")
-    prediction_log = engine.predict(85, "Science", "Commerce", 2, model="log")
-    
-    print(f"Neural Network Prediction:  {prediction_nn}")
-    print(f"XGBoost Prediction:         {prediction_xgb}")
-    print(f"Logistic Regression:        {prediction_log}")
+                raise ValueError("Invalid model type.")
+            return float(proba)
