@@ -1,0 +1,67 @@
+/* src/index.css */
+
+/* Root-level variables / defaults */
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  /* No color-scheme override; let the browser decide. */
+}
+
+/* Reset default margins/padding */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body styles: global background image, black text, white background fallback */
+body {
+  min-width: 320px;
+  min-height: 100vh;
+
+  /* Global background image */
+  background: url('/bgmcc.jpg') no-repeat center center fixed;
+  background-size: cover;
+
+  /* Fallback background color behind the image */
+  background-color: #fff;
+
+  /* Default text color */
+  color: #000;
+
+  /* Remove default body margin so your components can use full width/height */
+  margin: 0;
+  padding: 0;
+}
+
+/* Basic link styles */
+a {
+  color: #0066cc;       /* Standard link color */
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Basic heading style */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+
+/* Basic button style */
+button {
+  font-family: inherit;
+  font-size: 1em;
+  cursor: pointer;
+  background: #f2f2f2;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: background 0.25s;
+}
+button:hover {
+  background: #e2e2e2;
+}
+button:focus {
+  outline: 2px auto #999;
+}
