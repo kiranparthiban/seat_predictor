@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 django-cors-headers
-=======
 pandas
 numpy
 torch
 scikit-learn
 xgboost
 joblib
->>>>>>> 9227f452d6cb3420052a31d1c73c56570f079660

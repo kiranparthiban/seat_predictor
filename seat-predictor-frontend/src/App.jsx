@@ -5,24 +5,29 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import About from "./pages/About";
 import Result from "./pages/Result";
-import Home from "./pages/Home"; // <-- Import our new Home page
+import Home from "./pages/Home";
+import Layout from "./components/Layout";
+import "./index.css"; // Global CSS import
 
 function App() {
   return (
     <Router>
-      <Navbar />
-      <Routes>
-        {/* Homepage now points to Home component */}
-        <Route path="/" element={<Home />} />
+      <Layout>
+        {/* Navbar is rendered once, above all routes, on top of the background */}
+        <Navbar />
 
-        {/* Auth pages */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Routes>
+          {/* Auth routes */}
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Other pages */}
-        <Route path="/about" element={<About />} />
-        <Route path="/result" element={<Result />} />
-      </Routes>
+          {/* Other routes */}
+          <Route path="/about" element={<About />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/result" element={<Result />} />
+        </Routes>
+      </Layout>
     </Router>
   );
 }

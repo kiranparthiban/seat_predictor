@@ -1,18 +1,23 @@
 // src/pages/Login.jsx
 import React, { useState } from "react";
-import { Box, Button, TextField, Typography, Link } from "@mui/material";
+import { Box, Button, TextField, Typography, Link, Snackbar, Alert } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-/**
- * A brand-new Login component.
- * It sends { username, password } in JSON format
- * to http://127.0.0.1:8000/auth/login/
- */
 function Login() {
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  
+  // Snackbar state for in-app notifications
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // "success" or "error"
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") return;
+    setSnackbarOpen(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,30 +25,31 @@ function Login() {
       // Perform a POST request with JSON body
       const response = await fetch("http://127.0.0.1:8000/auth/login/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
         credentials: "include", // If using session cookies in Django
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Success: we can redirect to home
-        alert(data.message || "Login successful!");
-        navigate("/");
+        setSnackbarMessage(data.message || "Login successful!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+        // Navigate to Home page after a short delay (1 second)
+        setTimeout(() => {
+          navigate("/home");
+        }, 1000);
       } else {
-        // Failure: possibly 401 or 400
-        alert(`Error: ${data.error || "Login failed"}`);
+        setSnackbarMessage(`Error: ${data.error || "Login failed"}`);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
       }
     } catch (error) {
-      // Network or parse error
       console.error(error);
-      alert("An error occurred during login.");
+      setSnackbarMessage("An error occurred during login.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     }
   };
 
@@ -61,7 +67,6 @@ function Login() {
       </Typography>
 
       <form onSubmit={handleSubmit}>
-        {/* Username */}
         <TextField
           label="Username"
           value={username}
@@ -71,30 +76,39 @@ function Login() {
           required
         />
 
-        {/* Password */}
         <TextField
           label="Password"
+          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           fullWidth
           margin="normal"
-          type="password"
           required
         />
 
-        {/* Submit Button */}
         <Button variant="contained" type="submit" fullWidth sx={{ mt: 2 }}>
           Login
         </Button>
       </form>
 
-      {/* Don't have an account? */}
       <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
         Don&apos;t have an account?{" "}
         <Link component={RouterLink} to="/register">
           Register
         </Link>
       </Typography>
+
+      {/* Snackbar for in-app notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

@@ -9,7 +9,7 @@ function Navbar() {
         {/* Left Side: Placeholder Logo */}
         <Box display="flex" alignItems="center">
           <img
-            src="/placeholder_logo.png"  /* or from /src/assets if you prefer */
+            src="/mcc_logo.jpg"  /* or from /src/assets if you prefer */
             alt="MCC Logo"
             style={{ width: "50px", marginRight: "8px" }}
           />
