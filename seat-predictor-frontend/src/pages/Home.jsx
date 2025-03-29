@@ -10,7 +10,6 @@ import {
   StepLabel,
   Paper,
   Container,
-  IconButton,
   Fade,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -41,7 +40,7 @@ function Home() {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
 
-  // State for form fields (previous state declarations remain the same)
+  // State for form fields
   const [name, setName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
@@ -52,6 +51,8 @@ function Home() {
   const [stream, setStream] = useState("");
   const [degree, setDegree] = useState("");
   const [category, setCategory] = useState("");
+  // New state for model choice
+  const [modelChoice, setModelChoice] = useState("nn");
   const [class12Percentage, setClass12Percentage] = useState("");
 
   // Form steps configuration
@@ -240,6 +241,23 @@ function Home() {
             />
           ),
         },
+        {
+          component: (
+            <StyledTextField
+              label="Model Choice"
+              value={modelChoice}
+              onChange={(e) => setModelChoice(e.target.value)}
+              fullWidth
+              margin="normal"
+              select
+              required
+            >
+              <MenuItem value="nn">FeedForward Neural Network</MenuItem>
+              <MenuItem value="xgb">XGBoost Classifier</MenuItem>
+              <MenuItem value="log">Logistic Regression</MenuItem>
+            </StyledTextField>
+          ),
+        },
       ],
     },
   ];
@@ -273,6 +291,7 @@ function Home() {
           degree,
           category,
           class_12_percentage: class12Percentage,
+          model: modelChoice, // <-- Pass the selected model to the backend
         }),
       });
 

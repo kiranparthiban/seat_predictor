@@ -4,12 +4,20 @@ import { Link } from "react-router-dom";
 
 function Navbar() {
   return (
-    <AppBar position="static">
+    <AppBar
+      position="static"
+      sx={{
+        backgroundImage: "url('/bgmcc.jpg')", // Ensure bgmcc.jpg is in your public folder
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+      }}
+    >
       <Toolbar style={{ justifyContent: "space-between" }}>
         {/* Left Side: Placeholder Logo */}
         <Box display="flex" alignItems="center">
           <img
-            src="/mcc_logo.jpg"  /* or from /src/assets if you prefer */
+            src="/mcc_logo.jpg"  // Logo image from public folder
             alt="MCC Logo"
             style={{ width: "50px", marginRight: "8px" }}
           />
@@ -17,13 +25,10 @@ function Navbar() {
         </Box>
 
         {/* Right Side: Links */}
-        
-
-
         <Box>
-        <Button color="inherit" component={Link} to="/">
-  Home
-</Button>
+          <Button color="inherit" component={Link} to="/">
+            Home
+          </Button>
           <Button color="inherit" component={Link} to="/about">
             About
           </Button>
