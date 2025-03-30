@@ -34,7 +34,7 @@ def predict_view(request):
         except (ValueError, TypeError):
             return JsonResponse({"error": "Category must be an integer."}, status=400)
         
-        if category not in {0, 1, 2, 3}:
+        if category not in {0, 1, 2, 3, 4, 5}:
             return JsonResponse({"error": "Invalid category. Use 0, 1, 2, or 3."}, status=400)
         
         # Extract streams

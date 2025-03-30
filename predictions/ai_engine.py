@@ -55,9 +55,9 @@ class AiEngine:
         # Determine if streams match
         same_stream = 1 if school_stream.strip().lower() == college_stream.strip().lower() else 0
         
-        # Validate category (assuming categories 0-3)
-        if category not in {0, 1, 2, 3}:
-            raise ValueError(f"Invalid category: {category}. Must be 0, 1, 2, or 3.")
+        # Validate category (assuming categories 0-5)
+        if category not in {0, 1, 2, 3,4,5}:
+            raise ValueError(f"Invalid category: {category}.")
         
         # Create input array
         X_array = np.array([marks_12th_clipped, same_stream, float(category)]).reshape(1, -1)
