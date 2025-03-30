@@ -10,7 +10,10 @@ import {
   Paper,
   InputAdornment,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  ToggleButtonGroup,
+  ToggleButton,
+  Divider
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,7 +24,9 @@ import {
   Visibility,
   VisibilityOff,
   School,
-  LoginOutlined
+  LoginOutlined,
+  SupervisorAccount,
+  AccountCircle
 } from "@mui/icons-material";
 
 // Styled Components
@@ -58,12 +63,39 @@ const LoginButton = styled(Button)(({ theme }) => ({
   },
 }));
 
+const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
+  width: '100%',
+  marginBottom: theme.spacing(3),
+  '& .MuiToggleButtonGroup-grouped': {
+    margin: theme.spacing(0.5),
+    border: 0,
+    borderRadius: theme.spacing(1.5),
+    '&.Mui-selected': {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.common.white,
+      '&:hover': {
+        backgroundColor: theme.palette.primary.dark,
+      },
+    },
+  },
+}));
+
+const StyledToggleButton = styled(ToggleButton)(({ theme }) => ({
+  flex: 1,
+  padding: theme.spacing(1),
+  fontWeight: 600,
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+  },
+}));
+
 function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [userType, setUserType] = useState("student");
   
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -74,6 +106,12 @@ function Login() {
     setSnackbarOpen(false);
   };
 
+  const handleUserTypeChange = (event, newUserType) => {
+    if (newUserType !== null) {
+      setUserType(newUserType);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -82,26 +120,50 @@ function Login() {
       const response = await fetch("http://127.0.0.1:8000/auth/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, user_type: userType }),
         credentials: "include",
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        // Store authentication info in session storage
+        sessionStorage.setItem('authStatus', 'true');
+        sessionStorage.setItem('userRole', data.is_admin ? 'admin' : 'student');
+        sessionStorage.setItem('username', data.username);
+        
         setSnackbarMessage(data.message || "Welcome back! Login successful!");
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
-        setTimeout(() => {
-          navigate("/home");
-        }, 1000);
+        
+        // Redirect based on user type
+        if (data.is_admin) {
+          setTimeout(() => {
+            navigate("/admin-dashboard");
+          }, 1000);
+        } else {
+          setTimeout(() => {
+            navigate("/home");
+          }, 1000);
+        }
       } else {
+        // Clear any existing auth data
+        sessionStorage.removeItem('authStatus');
+        sessionStorage.removeItem('userRole');
+        sessionStorage.removeItem('username');
+        
         setSnackbarMessage(`Error: ${data.error || "Invalid credentials"}`);
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
       }
     } catch (error) {
       console.error(error);
+      
+      // Clear any existing auth data
+      sessionStorage.removeItem('authStatus');
+      sessionStorage.removeItem('userRole');
+      sessionStorage.removeItem('username');
+      
       setSnackbarMessage("Network error. Please try again.");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
@@ -164,6 +226,22 @@ function Login() {
                   </Typography>
                 </Box>
 
+                <StyledToggleButtonGroup
+                  value={userType}
+                  exclusive
+                  onChange={handleUserTypeChange}
+                  aria-label="user type"
+                >
+                  <StyledToggleButton value="student" aria-label="student login">
+                    <AccountCircle sx={{ mr: 1 }} />
+                    Student
+                  </StyledToggleButton>
+                  <StyledToggleButton value="admin" aria-label="admin login">
+                    <SupervisorAccount sx={{ mr: 1 }} />
+                    Admin
+                  </StyledToggleButton>
+                </StyledToggleButtonGroup>
+
                 <form onSubmit={handleSubmit}>
                   <StyledTextField
                     label="Username"
@@ -216,28 +294,38 @@ function Login() {
                     disabled={loading}
                     startIcon={loading ? <CircularProgress size={20} /> : <LoginOutlined />}
                   >
-                    {loading ? "Signing in..." : "Sign In"}
+                    {loading ? "Signing in..." : userType === "admin" ? "Admin Sign In" : "Student Sign In"}
                   </LoginButton>
                 </form>
 
-                <Box sx={{ mt: 3, textAlign: "center" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Don't have an account?{" "}
-                    <Link 
-                      component={RouterLink} 
-                      to="/register"
-                      sx={{ 
-                        fontWeight: 500,
-                        textDecoration: 'none',
-                        '&:hover': {
-                          textDecoration: 'underline',
-                        },
-                      }}
-                    >
-                      Create Account
-                    </Link>
-                  </Typography>
-                </Box>
+                {userType === "student" && (
+                  <Box sx={{ mt: 3, textAlign: "center" }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Don't have an account?{" "}
+                      <Link 
+                        component={RouterLink} 
+                        to="/register"
+                        sx={{ 
+                          fontWeight: 500,
+                          textDecoration: 'none',
+                          '&:hover': {
+                            textDecoration: 'underline',
+                          },
+                        }}
+                      >
+                        Create Account
+                      </Link>
+                    </Typography>
+                  </Box>
+                )}
+                
+                {userType === "admin" && (
+                  <Box sx={{ mt: 3, textAlign: "center" }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Admin credentials: admin / admin123
+                    </Typography>
+                  </Box>
+                )}
               </motion.div>
             </StyledPaper>
           </Box>

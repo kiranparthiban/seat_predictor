@@ -3,6 +3,8 @@ import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .ai_engine import AiEngine
+from auth_app.models import PredictionResult
+from django.contrib.auth.models import User
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
@@ -72,6 +74,31 @@ def predict_view(request):
 
         # Ensure probability is within 0-100 range
         adjusted_prob = max(0, min(100, adjusted_prob))
+
+        # Get the user from the request or from the username in the data
+        user = None
+        
+        # First check if user is authenticated
+        if request.user.is_authenticated:
+            user = request.user
+        # If not, try to get username from the data and find the user
+        elif 'username' in data and data['username']:
+            try:
+                user = User.objects.get(username=data['username'])
+            except User.DoesNotExist:
+                # If user doesn't exist, we'll leave user as None
+                pass
+        
+        # Create the prediction record
+        PredictionResult.objects.create(
+            user=user,
+            class_12_percentage=class_12_percentage,
+            category=category,
+            school_stream=school_stream,
+            college_stream=college_stream,
+            model_used=model,
+            result_percentage=adjusted_prob
+        )
 
         # Prepare response
         response_data = {

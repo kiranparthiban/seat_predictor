@@ -14,16 +14,26 @@ import {
   Avatar,
   Fade,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Chip
 } from "@mui/material";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { styled } from "@mui/material/styles";
-import { Menu as MenuIcon, School, Home, Info, Assessment } from "@mui/icons-material";
+import { 
+  Menu as MenuIcon, 
+  School, 
+  Home, 
+  Info, 
+  Assessment, 
+  Dashboard, 
+  Logout,
+  SupervisorAccount
+} from "@mui/icons-material";
 import { useState, useEffect } from "react";
 
 // Styled Components
-const StyledAppBar = styled(AppBar)(({ theme, trigger }) => ({
+const StyledAppBar = styled(AppBar)(({ theme, $trigger }) => ({
   backgroundImage: "url('/bgmcc.jpg')",
   backgroundSize: "cover",
   backgroundRepeat: "no-repeat",
@@ -35,25 +45,25 @@ const StyledAppBar = styled(AppBar)(({ theme, trigger }) => ({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: trigger 
+    backgroundColor: $trigger 
       ? 'rgba(0, 0, 0, 0.7)'
       : 'rgba(0, 0, 0, 0.5)',
-    backdropFilter: trigger ? 'blur(5px)' : 'none',
+    backdropFilter: $trigger ? 'blur(5px)' : 'none',
     transition: 'all 0.3s ease-in-out',
     zIndex: -1,
   },
   transition: 'all 0.3s ease-in-out',
 }));
 
-const NavButton = styled(Button)(({ theme, active }) => ({
+const NavButton = styled(Button)(({ theme, $active }) => ({
   position: 'relative',
   margin: theme.spacing(0, 1),
   color: '#ffffff',
-  fontWeight: active ? 600 : 400,
+  fontWeight: $active ? 600 : 400,
   '&::after': {
     content: '""',
     position: 'absolute',
-    width: active ? '100%' : '0%',
+    width: $active ? '100%' : '0%',
     height: '2px',
     bottom: '0',
     left: '0',
@@ -82,22 +92,69 @@ const LogoContainer = styled(Box)(({ theme }) => ({
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
+  const navigate = useNavigate();
   const trigger = useScrollTrigger({
     disableHysteresis: true,
     threshold: 50,
   });
 
-  const navItems = [
-    { text: 'Home', path: '/', icon: <Home sx={{ color: '#ffffff' }} /> },
-    { text: 'About', path: '/about', icon: <Info sx={{ color: '#ffffff' }} /> },
-    { text: 'Result', path: '/result', icon: <Assessment sx={{ color: '#ffffff' }} /> },
-  ];
+  // Check if current path is admin dashboard
+  useEffect(() => {
+    setIsAdmin(location.pathname === '/admin-dashboard');
+    setIsLoggedIn(
+      location.pathname === '/home' || 
+      location.pathname === '/result' || 
+      location.pathname === '/admin-dashboard'
+    );
+  }, [location.pathname]);
+
+  // Define navigation items based on user type
+  const getNavItems = () => {
+    if (isAdmin) {
+      return [
+        { text: 'Dashboard', path: '/admin-dashboard', icon: <Dashboard sx={{ color: '#ffffff' }} /> },
+      ];
+    } else if (isLoggedIn) {
+      return [
+        { text: 'Home', path: '/home', icon: <Home sx={{ color: '#ffffff' }} /> },
+        { text: 'About', path: '/about', icon: <Info sx={{ color: '#ffffff' }} /> },
+        { text: 'Result', path: '/result', icon: <Assessment sx={{ color: '#ffffff' }} /> },
+      ];
+    } else {
+      return [
+        { text: 'Login', path: '/login', icon: <Home sx={{ color: '#ffffff' }} /> },
+        { text: 'About', path: '/about', icon: <Info sx={{ color: '#ffffff' }} /> },
+      ];
+    }
+  };
+
+  const navItems = getNavItems();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('http://127.0.0.1:8000/auth/logout/', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      // Clear authentication data from session storage
+      sessionStorage.removeItem('authStatus');
+      sessionStorage.removeItem('userRole');
+      sessionStorage.removeItem('username');
+      
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const drawer = (
@@ -139,13 +196,27 @@ function Navbar() {
           variant="h6" 
           sx={{ 
             color: '#ffffff',
-            mb: 3,
+            mb: 1,
             fontWeight: 600,
             textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
           }}
         >
           MCC Predictor
         </Typography>
+        
+        {isAdmin && (
+          <Chip
+            icon={<SupervisorAccount sx={{ color: '#fff !important' }} />}
+            label="Admin Panel"
+            sx={{ 
+              mb: 3, 
+              bgcolor: 'error.main', 
+              color: 'white',
+              '& .MuiChip-icon': { color: 'white' }
+            }}
+          />
+        )}
+        
         <List>
           {navItems.map((item) => (
             <ListItem 
@@ -177,6 +248,33 @@ function Navbar() {
               />
             </ListItem>
           ))}
+          
+          {isLoggedIn && (
+            <ListItem 
+              onClick={handleLogout}
+              sx={{
+                color: '#ffffff',
+                backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                borderRadius: 1,
+                mb: 1,
+                transition: 'all 0.3s ease',
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                },
+              }}
+            >
+              <Box sx={{ mr: 2 }}><Logout sx={{ color: '#ffffff' }} /></Box>
+              <ListItemText 
+                primary="Logout"
+                primaryTypographyProps={{
+                  sx: {
+                    fontWeight: 500,
+                  }
+                }}
+              />
+            </ListItem>
+          )}
         </List>
       </Box>
     </Box>
@@ -184,7 +282,7 @@ function Navbar() {
 
   return (
     <>
-      <StyledAppBar position="fixed" trigger={trigger}>
+      <StyledAppBar position="fixed" $trigger={trigger}>
         <Container maxWidth="xl">
           <Toolbar sx={{ justifyContent: "space-between", py: 1 }}>
             <LogoContainer>
@@ -204,17 +302,33 @@ function Navbar() {
                 />
               </motion.div>
               <Fade in timeout={1000}>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    display: { xs: 'none', sm: 'block' },
-                    fontWeight: 600,
-                    color: '#ffffff',
-                    textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-                  }}
-                >
-                  MCC College Admission Predictor
-                </Typography>
+                <Box>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      display: { xs: 'none', sm: 'block' },
+                      fontWeight: 600,
+                      color: '#ffffff',
+                      textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    MCC College Admission Predictor
+                  </Typography>
+                  
+                  {isAdmin && (
+                    <Chip
+                      size="small"
+                      icon={<SupervisorAccount sx={{ color: '#fff !important' }} />}
+                      label="Admin Panel"
+                      sx={{ 
+                        display: { xs: 'none', sm: 'inline-flex' },
+                        bgcolor: 'error.main', 
+                        color: 'white',
+                        '& .MuiChip-icon': { color: 'white' }
+                      }}
+                    />
+                  )}
+                </Box>
               </Fade>
             </LogoContainer>
 
@@ -244,12 +358,22 @@ function Navbar() {
                     key={item.text}
                     component={Link}
                     to={item.path}
-                    active={location.pathname === item.path ? 1 : 0}
+                    $active={location.pathname === item.path}
                     startIcon={item.icon}
                   >
                     {item.text}
                   </NavButton>
                 ))}
+                
+                {isLoggedIn && (
+                  <NavButton
+                    onClick={handleLogout}
+                    startIcon={<Logout />}
+                    sx={{ color: theme.palette.error.light }}
+                  >
+                    Logout
+                  </NavButton>
+                )}
               </Box>
             )}
           </Toolbar>

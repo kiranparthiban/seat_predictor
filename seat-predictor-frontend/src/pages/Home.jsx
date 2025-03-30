@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Box, 
   Button, 
@@ -47,13 +47,45 @@ function Home() {
   const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
   const [religion, setReligion] = useState("");
-  const [course, setCourse] = useState("");
+  const [subject, setSubject] = useState("");
   const [stream, setStream] = useState("");
   const [degree, setDegree] = useState("");
   const [category, setCategory] = useState("");
   // New state for model choice
   const [modelChoice, setModelChoice] = useState("nn");
   const [class12Percentage, setClass12Percentage] = useState("");
+  
+  // Subject options based on selected stream
+  const [subjectOptions, setSubjectOptions] = useState([]);
+  
+  // Define subject options for each stream
+  const streamSubjects = {
+    science: [
+      { value: "pcm", label: "Physics, Chemistry, Mathematics" },
+      { value: "pcb", label: "Physics, Chemistry, Biology" },
+      { value: "pcmb", label: "Physics, Chemistry, Mathematics, Biology" }
+    ],
+    commerce: [
+      { value: "accountancy", label: "Accountancy, Business Studies, Economics" },
+      { value: "statistics", label: "Accountancy, Business Studies, Statistics" },
+      { value: "informatics", label: "Accountancy, Business Studies, Informatics Practices" }
+    ],
+    arts: [
+      { value: "history", label: "History, Political Science, Geography" },
+      { value: "psychology", label: "Psychology, Sociology, Political Science" },
+      { value: "economics", label: "Economics, Geography, Mathematics" }
+    ]
+  };
+  
+  // Update subject options when stream changes
+  useEffect(() => {
+    if (stream) {
+      setSubjectOptions(streamSubjects[stream] || []);
+      setSubject(""); // Reset subject when stream changes
+    } else {
+      setSubjectOptions([]);
+    }
+  }, [stream]);
 
   // Form steps configuration
   const steps = [
@@ -153,23 +185,6 @@ function Home() {
         {
           component: (
             <StyledTextField
-              label="Course"
-              value={course}
-              onChange={(e) => setCourse(e.target.value)}
-              fullWidth
-              margin="normal"
-              select
-              required
-            >
-              <MenuItem value="pcm">PCM</MenuItem>
-              <MenuItem value="pcb">PCB</MenuItem>
-              <MenuItem value="pcmb">PCMB</MenuItem>
-            </StyledTextField>
-          ),
-        },
-        {
-          component: (
-            <StyledTextField
               label="Stream"
               value={stream}
               onChange={(e) => setStream(e.target.value)}
@@ -181,6 +196,26 @@ function Home() {
               <MenuItem value="science">Science</MenuItem>
               <MenuItem value="commerce">Commerce</MenuItem>
               <MenuItem value="arts">Arts</MenuItem>
+            </StyledTextField>
+          ),
+        },
+        {
+          component: (
+            <StyledTextField
+              label="Subject Combination"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              fullWidth
+              margin="normal"
+              select
+              required
+              disabled={!stream} // Disable if no stream selected
+            >
+              {subjectOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
             </StyledTextField>
           ),
         },
@@ -273,6 +308,9 @@ function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Get username from session storage
+    const username = sessionStorage.getItem('username');
+
     try {
       const response = await fetch("http://127.0.0.1:8000/api/predict/", {
         method: "POST",
@@ -286,13 +324,15 @@ function Home() {
           gender,
           email,
           religion,
-          course,
+          course: subject, // Send the selected subject combination
           stream,
           degree,
           category,
           class_12_percentage: class12Percentage,
-          model: modelChoice, // <-- Pass the selected model to the backend
+          model: modelChoice,
+          username: username,
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();

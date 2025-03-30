@@ -136,5 +136,6 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
   "content-type",
   "authorization",
+  "x-admin-auth",  # Add our custom admin auth header
   # ... any others you need
 ]
