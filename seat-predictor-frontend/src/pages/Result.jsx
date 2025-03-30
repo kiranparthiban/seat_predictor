@@ -29,6 +29,10 @@ const ProgressCircle = styled(Box)(({ theme, probability }) => ({
     top: 0,
     left: 0,
   },
+  '& .MuiCircularProgress-circle': {
+    strokeLinecap: 'round',
+    r: 'calc(45% - 5px)', // Reducing the radius by 5px to increase inner space
+  },
 }));
 
 const ActionButton = styled(Button)(({ theme }) => ({
