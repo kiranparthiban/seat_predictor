@@ -219,12 +219,12 @@ function Home() {
               select
               required
             >
-              <MenuItem value="1">General</MenuItem>
-              <MenuItem value="2">OBC</MenuItem>
-              <MenuItem value="3">SC</MenuItem>
-              <MenuItem value="4">ST</MenuItem>
-              <MenuItem value="5">MBC</MenuItem>
-              <MenuItem value="6">BCM</MenuItem>
+              <MenuItem value="0">General</MenuItem>
+              <MenuItem value="1">OBC</MenuItem>
+              <MenuItem value="2">SC</MenuItem>
+              <MenuItem value="3">ST</MenuItem>
+              <MenuItem value="4">MBC</MenuItem>
+              <MenuItem value="5">BCM</MenuItem>
             </StyledTextField>
           ),
         },
