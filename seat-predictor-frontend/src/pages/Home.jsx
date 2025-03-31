@@ -61,19 +61,18 @@ function Home() {
   // Define subject options for each stream
   const streamSubjects = {
     science: [
-      { value: "pcm", label: "Physics, Chemistry, Mathematics" },
+      { value: "pcm_cs", label: "Physics, Chemistry, Mathematics + Computer Science" },
       { value: "pcb", label: "Physics, Chemistry, Biology" },
-      { value: "pcmb", label: "Physics, Chemistry, Mathematics, Biology" }
+      { value: "pcmb", label: "Physics, Chemistry, Mathematics + Biology" }
     ],
     commerce: [
-      { value: "accountancy", label: "Accountancy, Business Studies, Economics" },
-      { value: "statistics", label: "Accountancy, Business Studies, Statistics" },
-      { value: "informatics", label: "Accountancy, Business Studies, Informatics Practices" }
+      { value: "abem", label: "Accountancy, Business Studies, Economics, Mathematics" },
+      { value: "abei", label: "Accountancy, Business Studies, Economics, Information Practice" },
+      { value: "abeh", label: "Accountancy, Business Studies, Economics, Hindi" }
     ],
     arts: [
-      { value: "history", label: "History, Political Science, Geography" },
-      { value: "psychology", label: "Psychology, Sociology, Political Science" },
-      { value: "economics", label: "Economics, Geography, Mathematics" }
+      { value: "hpgs", label: "History, Political Science, Geography, Sociology" },
+      { value: "hpgp", label: "History, Political Science, Geography, Psychology" }
     ]
   };
   

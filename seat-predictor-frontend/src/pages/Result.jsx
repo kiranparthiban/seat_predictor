@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Box, Button, Typography, Link, Paper, CircularProgress } from "@mui/material";
+import { Box, Button, Typography, Link, Paper } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { styled } from "@mui/material/styles";
@@ -16,23 +16,10 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   overflow: 'hidden',
 }));
 
-const ProgressCircle = styled(Box)(({ theme, probability }) => ({
-  position: 'relative',
-  width: '200px',
-  height: '200px',
-  margin: '0 auto',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  '& .MuiCircularProgress-root': {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  '& .MuiCircularProgress-circle': {
-    strokeLinecap: 'round',
-    r: 'calc(45% - 5px)', // Reducing the radius by 5px to increase inner space
-  },
+const ProbabilityDisplay = styled(Box)(({ theme }) => ({
+  margin: '30px auto',
+  padding: theme.spacing(3),
+  textAlign: 'center',
 }));
 
 const ActionButton = styled(Button)(({ theme }) => ({
@@ -136,17 +123,7 @@ function Result() {
                   Madras Christian College
                 </Typography>
 
-                <ProgressCircle probability={probability}>
-                  <CircularProgress
-                    variant="determinate"
-                    value={probability}
-                    size={200}
-                    thickness={4}
-                    sx={{
-                      color: probability >= 60 ? 'success.main' : 
-                             probability >= 40 ? 'warning.main' : 'error.main'
-                    }}
-                  />
+                <ProbabilityDisplay>
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -163,7 +140,7 @@ function Result() {
                       {probability}%
                     </Typography>
                   </motion.div>
-                </ProgressCircle>
+                </ProbabilityDisplay>
 
                 <Box sx={{ mt: 4 }}>
                   <Typography variant="h6" color="text.secondary" gutterBottom>
